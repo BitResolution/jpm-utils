@@ -21,7 +21,7 @@ public class BlockingFifoQueue<T> implements FifoQueue<T> {
 
     @Override
     public synchronized T dequeue() {
-        return null;
+        return queue.poll();
     }
 
     public int size() {
