@@ -1,11 +1,9 @@
 package com.bitresolution.jpm.utils;
 
-import com.jayway.awaitility.Duration;
 import org.junit.Test;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static com.jayway.awaitility.Awaitility.to;
@@ -71,7 +69,7 @@ public class BlockingFifoQueueTest {
         scheduler.schedule(producer, ONE_SECOND.getValueInMS(), MILLISECONDS);
 
         //then
-        await().untilCall(to(producer).isComplete(), is(true)); //this shouldn't be a blocking operation
+        await().untilCall(to(producer).isComplete(), is(true)); //enqueue on empty queue is non-blocking
         await().atMost(FIVE_SECONDS).untilCall(to(consumer).isComplete(), is(true)); // timeout in case something goes wrong
         assertThat(consumer.getItem(), is(ITEM));
     }
@@ -91,10 +89,8 @@ public class BlockingFifoQueueTest {
 
         @Override
         public void run() {
-            synchronized (this) {
-                queue.enqueue(item);
-                this.complete = true;
-            }
+            queue.enqueue(item);
+            this.complete = true;
         }
 
         public boolean isComplete() {
@@ -116,11 +112,9 @@ public class BlockingFifoQueueTest {
 
         @Override
         public void run() {
-            synchronized (this) {
-                this.running = true;
-                this.item = queue.dequeue();
-                this.complete = true;
-            }
+            this.running = true;
+            this.item = queue.dequeue();
+            this.complete = true;
         }
 
         public boolean isComplete() {
