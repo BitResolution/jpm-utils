@@ -2,6 +2,7 @@ package com.bitresolution.jpm.utils;
 
 import org.junit.Test;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -52,7 +53,7 @@ public class BlockingFifoQueueTest {
     @Test
     public void shouldBlockUntilElementIsAvailableWhenRemovingFromQueue() {
         //given
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
 
         BlockingFifoQueue<String> queue = new BlockingFifoQueue<String>(1);
         Producer producer = new Producer(queue, ITEM);
@@ -60,17 +61,18 @@ public class BlockingFifoQueueTest {
         assumeThat(consumer.isComplete(), is(false));
 
         //when
-        scheduler.execute(consumer);
+        executor.execute(consumer);
         //out of order execution means unless we block until consumer.isRunning we might check the state too early
         //if the queue is not actually blocking on dequeues!
         await().untilCall(to(consumer).isRunning(), is(true));
         assertThat(consumer.isComplete(), is(false));
 
-        scheduler.schedule(producer, ONE_SECOND.getValueInMS(), MILLISECONDS);
+        executor.execute(producer);
+        await().untilCall(to(producer).isRunning(), is(true));
 
         //then
-        await().untilCall(to(producer).isComplete(), is(true)); //enqueue on empty queue is non-blocking
-        await().atMost(FIVE_SECONDS).untilCall(to(consumer).isComplete(), is(true)); // timeout in case something goes wrong
+        await().untilCall(to(producer).isComplete(), is(true));
+        await().untilCall(to(consumer).isComplete(), is(true));
         assertThat(consumer.getItem(), is(ITEM));
     }
 
@@ -80,21 +82,28 @@ public class BlockingFifoQueueTest {
         private final BlockingFifoQueue<String> queue;
         private final String item;
         private boolean complete;
+        private boolean running;
 
         private Producer(BlockingFifoQueue<String> queue, String item) {
             this.queue = queue;
             this.item = item;
             this.complete = false;
+            this.running = false;
         }
 
         @Override
         public void run() {
+            this.running = true;
             queue.enqueue(item);
             this.complete = true;
         }
 
         public boolean isComplete() {
             return complete;
+        }
+
+        public boolean isRunning() {
+            return running;
         }
     }
 
@@ -108,6 +117,7 @@ public class BlockingFifoQueueTest {
         private Consumer(BlockingFifoQueue<String> queue) {
             this.queue = queue;
             this.complete = false;
+            this.running = false;
         }
 
         @Override
