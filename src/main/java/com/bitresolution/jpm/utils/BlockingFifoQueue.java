@@ -3,8 +3,12 @@ package com.bitresolution.jpm.utils;
 import java.util.LinkedList;
 import java.util.Queue;
 
+/**
+ * An ArrayList-backed implementation of a blocking FifoQueue.
+ *
+ * @param <T> type of items the queue can contain.
+ */
 public class BlockingFifoQueue<T> implements FifoQueue<T> {
-
 
     private final Queue<T> queue;
     private final int capacity;
@@ -14,6 +18,13 @@ public class BlockingFifoQueue<T> implements FifoQueue<T> {
         this.queue = new LinkedList<T>();
     }
 
+    /**
+     * Adds an element to the tail of the queue. If the queue is currently full (size == capacity) then
+     * the method will block until space becomes available. This is a non-interruptable blocking call, however
+     * any interrupt status will be propagated to the calling thread.
+     *
+     * @param obj the item to insert
+     */
     @Override
     public synchronized void enqueue(T item) {
         boolean interrupted = false;
@@ -37,6 +48,13 @@ public class BlockingFifoQueue<T> implements FifoQueue<T> {
         notifyAll(); //wake up any consumers
     }
 
+    /**
+     * Removes the element at the head of the queue. If the queue is currently empty then
+     * the method will block until an element becomes available. This is a non-interruptable blocking call, however
+     * any interrupt status will be propagated to the calling thread.
+     *
+     * @return T the oldest element in the queue
+     */
     @Override
     public synchronized T dequeue() {
         boolean interrupted = false;
@@ -61,11 +79,17 @@ public class BlockingFifoQueue<T> implements FifoQueue<T> {
         return item;
     }
 
+    /**
+     * @return the current size of the queue
+     */
     @Override
     public int size() {
         return queue.size();
     }
 
+    /**
+     * @return the maximum number of items the queue can hold at any one time
+     */
     @Override
     public int getCapacity() {
         return capacity;
