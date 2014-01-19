@@ -12,7 +12,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
-public class BlockingFifoQueueTest {
+public abstract class AbstractBlockingFifoQueueTest {
 
     private static final String ITEM = "item";
     private static final String ITEM_A = "item A";
@@ -21,7 +21,7 @@ public class BlockingFifoQueueTest {
     @Test
     public void shouldBeAbleToAddElementToUnderCapacityQueue() {
         //given
-        FifoQueue<String> queue = new BlockingFifoQueue<String>(1);
+        FifoQueue<String> queue = newFixedCapacityQueue(1);
         assumeThat(queue.size(), is(0));
         assumeThat(queue.getCapacity(), is(1));
         assumeThat(queue.size(), is(lessThanOrEqualTo(queue.getCapacity())));
@@ -35,7 +35,7 @@ public class BlockingFifoQueueTest {
     @Test
     public void shouldBeAbleToRemoveOldestElementFromNonEmptyQueue() {
         //given
-        FifoQueue<String> queue = new BlockingFifoQueue<String>(2);
+        FifoQueue<String> queue = newFixedCapacityQueue(2);
         queue.enqueue(ITEM_A);
         queue.enqueue(ITEM_B);
         assumeThat(queue.size(), is(2));
@@ -51,7 +51,7 @@ public class BlockingFifoQueueTest {
         //given
         ExecutorService executor = Executors.newFixedThreadPool(2);
 
-        FifoQueue<String> queue = new BlockingFifoQueue<String>(1);
+        FifoQueue<String> queue = newFixedCapacityQueue(1);
         Producer producer = new Producer(queue, ITEM);
         Consumer consumer = new Consumer(queue);
         assumeThat(consumer.isComplete(), is(false));
@@ -77,7 +77,7 @@ public class BlockingFifoQueueTest {
         //given
         ExecutorService executor = Executors.newFixedThreadPool(2);
 
-        FifoQueue<String> queue = new BlockingFifoQueue<String>(1);
+        FifoQueue<String> queue = newFixedCapacityQueue(1);
         queue.enqueue(ITEM_A);
         Producer producer = new Producer(queue, ITEM_B);
         Consumer consumer = new Consumer(queue);
@@ -97,4 +97,6 @@ public class BlockingFifoQueueTest {
         assertThat(consumer.getItem(), is(ITEM_A));
         assertThat(queue.size(), is(1));
     }
+
+    protected abstract FifoQueue<String> newFixedCapacityQueue(int capacity);
 }

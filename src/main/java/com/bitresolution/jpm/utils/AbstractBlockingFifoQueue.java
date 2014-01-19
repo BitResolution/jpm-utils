@@ -1,21 +1,20 @@
 package com.bitresolution.jpm.utils;
 
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.List;
 
 /**
  * An ArrayList-backed implementation of a blocking FifoQueue.
  *
  * @param <T> type of items the queue can contain.
  */
-public class BlockingFifoQueue<T> implements FifoQueue<T> {
+abstract class AbstractBlockingFifoQueue<T> implements FifoQueue<T> {
 
-    private final Queue<T> queue;
+    protected final List<T> queue;
     private final int capacity;
 
-    public BlockingFifoQueue(int capacity) {
+    protected AbstractBlockingFifoQueue(int capacity, List<T> backingList) {
         this.capacity = capacity;
-        this.queue = new LinkedList<T>();
+        this.queue = backingList;
     }
 
     /**
@@ -23,7 +22,7 @@ public class BlockingFifoQueue<T> implements FifoQueue<T> {
      * the method will block until space becomes available. This is a non-interruptable blocking call, however
      * any interrupt status will be propagated to the calling thread.
      *
-     * @param obj the item to insert
+     * @param item the element to insert
      */
     @Override
     public synchronized void enqueue(T item) {
@@ -74,10 +73,17 @@ public class BlockingFifoQueue<T> implements FifoQueue<T> {
                 Thread.currentThread().interrupt();
             }
         }
-        T item = queue.poll();
+        T item = pop();
         notifyAll(); //wake up any producers
         return item;
     }
+
+    /**
+     * Implementation override this to provide a way to get the head element of the list, e.g. ArrayList
+     * does not have poll()
+     * @return
+     */
+    protected abstract T pop();
 
     /**
      * @return the current size of the queue
