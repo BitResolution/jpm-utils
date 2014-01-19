@@ -9,6 +9,9 @@ import java.util.concurrent.TimeUnit;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static com.jayway.awaitility.Awaitility.to;
+import static com.jayway.awaitility.Duration.FIVE_SECONDS;
+import static com.jayway.awaitility.Duration.ONE_SECOND;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -65,11 +68,12 @@ public class BlockingFifoQueueTest {
         await().untilCall(to(consumer).isRunning(), is(true));
         assertThat(consumer.isComplete(), is(false));
 
-        scheduler.schedule(producer, Duration.ONE_SECOND.getValueInMS(), TimeUnit.MILLISECONDS);
+        scheduler.schedule(producer, ONE_SECOND.getValueInMS(), MILLISECONDS);
 
         //then
-        await().untilCall(to(producer).isComplete(), is(true));
-        await().atMost(Duration.FIVE_SECONDS).untilCall(to(consumer).isComplete(), is(true));
+        await().untilCall(to(producer).isComplete(), is(true)); //this shouldn't be a blocking operation
+        await().atMost(FIVE_SECONDS).untilCall(to(consumer).isComplete(), is(true)); // timeout in case something goes wrong
+        assertThat(consumer.getItem(), is(ITEM));
     }
 
 
@@ -125,6 +129,10 @@ public class BlockingFifoQueueTest {
 
         public boolean isRunning() {
             return running;
+        }
+
+        public String getItem() {
+            return item;
         }
     }
 }
