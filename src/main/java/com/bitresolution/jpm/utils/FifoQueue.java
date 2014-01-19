@@ -1,7 +1,7 @@
 package com.bitresolution.jpm.utils;
 
 /**
- * A simple FIFO (First-In First-Out queue) definition.
+ * A simple bounded FIFO (First-In First-Out queue) definition.
  *
  * @param <T> type of items the queue can contain.
  */

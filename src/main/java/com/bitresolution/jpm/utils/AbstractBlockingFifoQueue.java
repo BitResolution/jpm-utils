@@ -3,7 +3,8 @@ package com.bitresolution.jpm.utils;
 import java.util.List;
 
 /**
- * An ArrayList-backed implementation of a blocking FifoQueue.
+ * An base class for implementations of a blocking FifoQueue. Subclasses should provide a list implementation via the
+ * constructor and a means of removing the head element of the list by overriding pop().
  *
  * @param <T> type of items the queue can contain.
  */
@@ -79,7 +80,7 @@ abstract class AbstractBlockingFifoQueue<T> implements FifoQueue<T> {
     }
 
     /**
-     * Implementation override this to provide a way to get the head element of the list, e.g. ArrayList
+     * Implementations override this to provide a way to get the head element of the list, e.g. ArrayList
      * does not have poll()
      * @return
      */
