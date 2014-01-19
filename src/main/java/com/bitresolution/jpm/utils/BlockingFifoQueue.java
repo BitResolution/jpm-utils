@@ -16,6 +16,14 @@ public class BlockingFifoQueue<T> implements FifoQueue<T> {
 
     @Override
     public synchronized void enqueue(T item) {
+        while(queue.size() >= capacity) {
+            try {
+                wait();
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace(); //bad
+            }
+        }
         queue.add(item);
         notifyAll();
     }

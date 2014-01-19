@@ -4,13 +4,9 @@ import org.junit.Test;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static com.jayway.awaitility.Awaitility.to;
-import static com.jayway.awaitility.Duration.FIVE_SECONDS;
-import static com.jayway.awaitility.Duration.ONE_SECOND;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -76,67 +72,29 @@ public class BlockingFifoQueueTest {
         assertThat(consumer.getItem(), is(ITEM));
     }
 
+    @Test
+    public void shouldBlockUntilSpaceIsAvailableWhenAddingToQueue() {
+        //given
+        ExecutorService executor = Executors.newFixedThreadPool(2);
 
-    private static class Producer implements Runnable {
+        BlockingFifoQueue<String> queue = new BlockingFifoQueue<String>(1);
+        queue.enqueue(ITEM_A);
+        Producer producer = new Producer(queue, ITEM_B);
+        Consumer consumer = new Consumer(queue);
+        assumeThat(consumer.isComplete(), is(false));
 
-        private final BlockingFifoQueue<String> queue;
-        private final String item;
-        private boolean complete;
-        private boolean running;
+        //when
+        executor.execute(producer);
+        await().untilCall(to(producer).isRunning(), is(true));
+        assertThat(consumer.isComplete(), is(false));
 
-        private Producer(BlockingFifoQueue<String> queue, String item) {
-            this.queue = queue;
-            this.item = item;
-            this.complete = false;
-            this.running = false;
-        }
+        executor.execute(consumer);
+        await().untilCall(to(consumer).isRunning(), is(true));
 
-        @Override
-        public void run() {
-            this.running = true;
-            queue.enqueue(item);
-            this.complete = true;
-        }
-
-        public boolean isComplete() {
-            return complete;
-        }
-
-        public boolean isRunning() {
-            return running;
-        }
-    }
-
-    private static class Consumer implements Runnable {
-
-        private final BlockingFifoQueue<String> queue;
-        private String item;
-        private boolean complete;
-        private boolean running;
-
-        private Consumer(BlockingFifoQueue<String> queue) {
-            this.queue = queue;
-            this.complete = false;
-            this.running = false;
-        }
-
-        @Override
-        public void run() {
-            this.running = true;
-            this.item = queue.dequeue();
-            this.complete = true;
-        }
-
-        public boolean isComplete() {
-            return complete;
-        }
-
-        public boolean isRunning() {
-            return running;
-        }
-
-        public String getItem() {
-            return item;
-        }
+        //then
+        await().untilCall(to(producer).isComplete(), is(true));
+        await().untilCall(to(consumer).isComplete(), is(true));
+        assertThat(consumer.getItem(), is(ITEM_A));
+        assertThat(queue.size(), is(1));
     }
 }
