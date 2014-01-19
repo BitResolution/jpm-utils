@@ -16,37 +16,57 @@ public class BlockingFifoQueue<T> implements FifoQueue<T> {
 
     @Override
     public synchronized void enqueue(T item) {
-        while(queue.size() >= capacity) {
-            try {
-                wait();
+        boolean interrupted = false;
+        try {
+            while(queue.size() >= capacity) {
+                try {
+                    wait();
+                }
+                catch (InterruptedException e) {
+                    interrupted = true;
+                    //fall through, retry and propagate interrupt status later
+                }
             }
-            catch (InterruptedException e) {
-                e.printStackTrace(); //bad
+        }
+        finally {
+            if(interrupted) {
+                Thread.currentThread().interrupt();
             }
         }
         queue.add(item);
-        notifyAll();
+        notifyAll(); //wake up any consumers
     }
 
     @Override
     public synchronized T dequeue() {
-        while(queue.size() == 0) {
-            try {
-                wait();
+        boolean interrupted = false;
+        try {
+            while(queue.size() == 0) {
+                try {
+                    wait();
+                }
+                catch (InterruptedException e) {
+                    interrupted = true;
+                    //fall through, retry and propagate interrupt status later
+                }
             }
-            catch (InterruptedException e) {
-                e.printStackTrace(); //bad
+        }
+        finally {
+            if(interrupted) {
+                Thread.currentThread().interrupt();
             }
         }
         T item = queue.poll();
-        notifyAll();
+        notifyAll(); //wake up any producers
         return item;
     }
 
+    @Override
     public int size() {
         return queue.size();
     }
 
+    @Override
     public int getCapacity() {
         return capacity;
     }

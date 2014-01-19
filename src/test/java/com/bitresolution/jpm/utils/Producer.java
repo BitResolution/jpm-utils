@@ -2,12 +2,12 @@ package com.bitresolution.jpm.utils;
 
 class Producer implements Runnable {
 
-    private final BlockingFifoQueue<String> queue;
+    private final FifoQueue<String> queue;
     private final String item;
     private boolean complete;
     private boolean running;
 
-    Producer(BlockingFifoQueue<String> queue, String item) {
+    Producer(FifoQueue<String> queue, String item) {
         this.queue = queue;
         this.item = item;
         this.complete = false;

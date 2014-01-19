@@ -2,12 +2,12 @@ package com.bitresolution.jpm.utils;
 
 class Consumer implements Runnable {
 
-    private final BlockingFifoQueue<String> queue;
+    private final FifoQueue<String> queue;
     private String item;
     private boolean complete;
     private boolean running;
 
-    Consumer(BlockingFifoQueue<String> queue) {
+    Consumer(FifoQueue<String> queue) {
         this.queue = queue;
         this.complete = false;
         this.running = false;

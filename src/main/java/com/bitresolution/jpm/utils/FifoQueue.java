@@ -4,4 +4,8 @@ public interface FifoQueue<T> {
 
     public void enqueue(T obj);
     public T dequeue();
+
+    int size();
+
+    int getCapacity();
 }
