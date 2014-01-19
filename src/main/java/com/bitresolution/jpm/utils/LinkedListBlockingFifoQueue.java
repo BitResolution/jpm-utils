@@ -3,7 +3,9 @@ package com.bitresolution.jpm.utils;
 import java.util.LinkedList;
 
 /**
- * An ArrayList-backed implementation of a blocking FifoQueue.
+ * An LinkedList-backed implementation of a blocking FifoQueue. This implementation is more efficient
+ * than ArraryListBlockingFifoQueue since it doesn't require the constant management of the array underlying
+ * ArrayList.
  *
  * @param <T> type of items the queue can contain.
  */
