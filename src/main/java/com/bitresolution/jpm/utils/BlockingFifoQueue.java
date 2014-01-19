@@ -17,11 +17,22 @@ public class BlockingFifoQueue<T> implements FifoQueue<T> {
     @Override
     public synchronized void enqueue(T item) {
         queue.add(item);
+        notifyAll();
     }
 
     @Override
     public synchronized T dequeue() {
-        return queue.poll();
+        while(queue.size() == 0) {
+            try {
+                wait();
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace(); //bad
+            }
+        }
+        T item = queue.poll();
+        notifyAll();
+        return item;
     }
 
     public int size() {
